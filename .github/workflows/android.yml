@@ -33,52 +33,59 @@ jobs:
         run: |
           export CI=true
           
-          # Create and enter project
           cordova create myapp com.reno.sodacal "SodaCal" --no-telemetry
           cd myapp
           cordova platform add android
 
-          # Add Plugins
+          # Essential Plugins for Camera & Performance
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-plugin-camera
+          cordova plugin add cordova-plugin-androidx-adapter
 
-          # Generate clean config.xml
+          # Generate PERFORMANCE-OPTIMIZED config.xml
           cat <<EOF > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="com.reno.sodacal" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+          <widget id="com.reno.sodacal" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>SodaCal</name>
-              <description>SodaCal Scanner App</description>
+              <description>High-Performance Barcode Scanner</description>
               <author email="dev@sodacal.com" href="https://renojohnson7.github.io/">SodaCal Team</author>
+              
               <content src="index.html" />
               <access origin="*" />
               <allow-intent href="*" />
               <allow-navigation href="https://*/*" />
+              
+              <preference name="HardwareAcceleration" value="true" />
+              <preference name="AndroidXEnabled" value="true" />
+              <preference name="KeepRunning" value="true" />
               <preference name="Orientation" value="portrait" />
+              
               <icon src="www/icon.png" />
+              
               <platform name="android">
                   <config-file target="AndroidManifest.xml" parent="/*">
                       <uses-permission android:name="android.permission.CAMERA" />
-                      <uses-feature android:name="android.hardware.camera" />
-                      <uses-feature android:name="android.hardware.camera.autofocus" />
+                      <uses-feature android:name="android.hardware.camera" android:required="true" />
+                      <uses-feature android:name="android.hardware.camera.autofocus" android:required="true" />
                   </config-file>
+                  
+                  <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+                      <application android:hardwareAccelerated="true" android:usesCleartextTraffic="true" />
+                  </edit-config>
               </platform>
           </widget>
           EOF
 
-          # Handle Icon and Redirect
           if [ -f "../icon.png" ]; then
             cp ../icon.png www/icon.png
           fi
 
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal...</body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting High-Speed Scanner...</body></html>' > www/index.html
 
-          # Standard Build (Produces a Debug APK by default)
           cordova build android --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SodaCal-App-Package
-          # Using **/*.apk ensures it finds the file even if the folder structure shifts
+          name: SodaCal-HighPerformance-APK
           path: myapp/platforms/android/app/build/outputs/apk/**/*.apk
-          if-no-files-found: error
