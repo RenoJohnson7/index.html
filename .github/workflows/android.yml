@@ -1,35 +1,32 @@
-name: Build Website APK
+name: Build Final App
 on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Your Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build and Customise
+      - name: Build APK
         run: |
-          # 1. Clone the wrapper
           git clone https://github.com/Jipok/website-to-apk.git wrapper
           cd wrapper
+
+          # This line forces your URL and Name into the app's settings
+          echo '{"url": "https://renojohnson7.github.io/index.html", "name": "Kingdom of Powers"}' > app/src/main/assets/config.json
+
           chmod +x gradlew
-
-          # 2. FORCE your website and name into the config
-          # Change "My App Name" below to whatever you want!
-          echo '{"url": "https://renojohnson7.github.io/index.html", "name": "My App Name"}' > app/src/main/assets/config.json
-
-          # 3. Build the APK
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Final-App-Download
+          name: Kingdom-Of-Powers-App
           path: wrapper/app/build/outputs/apk/debug/*.apk
