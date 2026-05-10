@@ -1,36 +1,33 @@
 name: Build Website APK
-on: [push]branch_protection_rule: 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps: 
-      - name: Checkout
+    steps:
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-            java-version: '17'
-            distribution: 'temurin'
+          java-version: '17'
+          distribution: 'temurin'
 
-      - name: Build with Web View
-        run: | 
-          # 1. Download the clean wrapper
-          git clone https://github.com/Jipok/website-to-apk.gitwrapper
-                              cd wrapper
-                              # 2. Give the "Robot" permission to run the builder
-                              chmod +x gradlew
-
-                              # 3. Create the configuration 
-                              echo '{"url": "https://renojohnson7.github.io/index.html/", "name": "RenoApp"}' > config.json
-
-                              # 4. Start the build
-                              ./gradlew assembleDebug
+      - name: Clone and Build
+        run: |
+          git clone https://github.com/Jipok/website-to-apk.git build_folder
+          cd build_folder
+          chmod +x gradlew
+          # This line creates the configuration for your specific website
+          echo '{"url": "https://renojohnson7.github.io/index.html", "name": "RenoApp"}' > app/src/main/assets/config.json
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with: 
-          name: My-Clean-App
-          path: wrapper/app/build/outputs/apk/debug/*.apk
-
+        with:
+          name: RenoApp-Download
+          path: build_folder/app/build/outputs/apk/debug/*.apk
