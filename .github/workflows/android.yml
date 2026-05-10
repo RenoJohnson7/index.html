@@ -1,4 +1,4 @@
-name: SodaCal Final Build
+name: SodaCal Official Build
 
 on:
   push:
@@ -23,7 +23,6 @@ jobs:
         with:
           node-version: '20'
 
-      # Ensures Android SDK and Licenses are ready
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -32,19 +31,18 @@ jobs:
 
       - name: Build SodaCal App
         run: |
-          # 1. Prevent interactive prompts
           export CI=true
           
-          # 2. Create the project
+          # Create and enter project
           cordova create myapp com.reno.sodacal "SodaCal" --no-telemetry
           cd myapp
           cordova platform add android
 
-          # 3. Add Plugins
+          # Add Plugins
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-plugin-camera
 
-          # 4. GENERATE CLEAN CONFIG.XML (This replaces the broken sed commands)
+          # Generate clean config.xml
           cat <<EOF > config.xml
           <?xml version='1.0' encoding='utf-8'?>
           <widget id="com.reno.sodacal" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -67,18 +65,20 @@ jobs:
           </widget>
           EOF
 
-          # 5. Handle Icon and Redirect
+          # Handle Icon and Redirect
           if [ -f "../icon.png" ]; then
             cp ../icon.png www/icon.png
           fi
 
           echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal...</body></html>' > www/index.html
 
-          # 6. Final Build
-          cordova build android --release -- --loglevel=error
+          # Standard Build (Produces a Debug APK by default)
+          cordova build android --verbose
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SodaCal-Official-APK
-          path: myapp/platforms/android/app/build/outputs/apk/debug/*.apk
+          name: SodaCal-App-Package
+          # Using **/*.apk ensures it finds the file even if the folder structure shifts
+          path: myapp/platforms/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
