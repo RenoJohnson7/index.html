@@ -1,33 +1,35 @@
 name: Build Website APK
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout Your Code
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Clone and Build
+      - name: Build and Customise
         run: |
-          git clone https://github.com/Jipok/website-to-apk.git build_folder
-          cd build_folder
+          # 1. Clone the wrapper
+          git clone https://github.com/Jipok/website-to-apk.git wrapper
+          cd wrapper
           chmod +x gradlew
-          # This line creates the configuration for your specific website
-          echo '{"url": "https://renojohnson7.github.io/index.html", "name": "RenoApp"}' > app/src/main/assets/config.json
+
+          # 2. FORCE your website and name into the config
+          # Change "My App Name" below to whatever you want!
+          echo '{"url": "https://renojohnson7.github.io/index.html", "name": "My App Name"}' > app/src/main/assets/config.json
+
+          # 3. Build the APK
           ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: RenoApp-Download
-          path: build_folder/app/build/outputs/apk/debug/*.apk
+          name: Final-App-Download
+          path: wrapper/app/build/outputs/apk/debug/*.apk
