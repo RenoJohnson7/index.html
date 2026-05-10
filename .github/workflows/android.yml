@@ -1,4 +1,4 @@
-name: Final Official Build
+name: SodaCal Final Build
 on:
   push:
     branches: [ main, master ]
@@ -14,27 +14,34 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Official Build Tools
+      - name: Install Build Tools
         run: npm install -g cordova
 
-      - name: Create and Build App
+      - name: Create and Configure Project
         run: |
           # 1. Create the project
           cordova create myapp com.reno.sodacal "SodaCal"
           cd myapp
           cordova platform add android
 
-          # 2. ADD CAMERA PERMISSIONS (This is the missing step)
+          # 2. Add Camera and Permission Plugins
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-plugin-camera
 
-          # 3. Update config.xml to explicitly ask for Camera and Navigation
-          sed -i 's|</widget>|<feature name="Camera"><param name="android-package" value="org.apache.cordova.camera.CameraLauncher" /></feature>\n <allow-intent href="allow-intent href="*" />\n <allow-navigation href="https://*/*" />\n <config-file target="AndroidManifest.xml" parent="/*"><uses-permission android:name="android.permission.CAMERA" /><uses-feature android:name="android.hardware.camera" /><uses-feature android:name="android.hardware.camera.autofocus" /></config-file>\n</widget>|' config.xml
+          # 3. Update config.xml (FIXED TYPO HERE)
+          sed -i 's|</widget>|<allow-intent href="*" />\n <allow-navigation href="https://*/*" />\n <config-file target="AndroidManifest.xml" parent="/*"><uses-permission android:name="android.permission.CAMERA" /><uses-feature android:name="android.hardware.camera" /><uses-feature android:name="android.hardware.camera.autofocus" /></config-file>\n</widget>|' config.xml
 
-          # 4. Set the redirect to your SodaCal website
-          echo '<html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Opening SodaCal Scanner...</body></html>' > www/index.html
+          # 4. Use your logo (Make sure icon.png is in your main GitHub folder)
+          if [ -f "../icon.png" ];
+          then
+            cp ../icon.png www/icon.png
+            sed -i '/<content/i \    <icon src="www/icon.png" />' config.xml
+          fi
 
-          # 5. Build the final APK
+          # 5. Set the redirect to your SodaCal website
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal Scanner...</body></html>' > www/index.html
+
+          # 6. Build the final APK
           cordova build android
 
       - name: Upload APK
