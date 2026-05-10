@@ -1,32 +1,42 @@
-name: Build Final App
-on: [push]
+name: Final Official Build
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build APK
+      - name: Install Official Build Tools
+        run: npm install -g cordova
+
+      - name: Create and Build App
         run: |
-          git clone https://github.com/Jipok/website-to-apk.git wrapper
-          cd wrapper
+          # 1. Create a brand new, clean project from scratch
+          cordova create myapp com.reno.kingdom "KingdomOfPowers"
+          cd myapp
 
-          # This line forces your URL and Name into the app's settings
-          echo '{"url": "https://renojohnson7.github.io/index.html", "name": "Kingdom of Powers"}' > app/src/main/assets/config.json
+          # 2. Add Android system files
+          cordova platform add android
 
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          # 3. Security override to allow your specific website to load
+          sed -i 's|</widget>|<allow-navigation href="https://*/*" />\n</widget>|' config.xml
+
+          # 4. Delete default branding and force the app to open your link immediately
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Loading Kingdom of Powers...</body></html>' > www/index.html
+
+          # 5. Compile the final APK
+          cordova build android
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Kingdom-Of-Powers-App
-          path: wrapper/app/build/outputs/apk/debug/*.apk
+          path: myapp/platforms/android/app/build/outputs/apk/debug/*.apk
