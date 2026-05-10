@@ -1,31 +1,36 @@
 name: Build Website APK
-on: [push]
+on: [push]branch_protection_rule: 
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
+    steps: 
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+            java-version: '17'
+            distribution: 'temurin'
 
-      - name: Build with WebView
-        run: |
-          # This is a shortcut:
-          it downloads a clean wrapper and
-          inserts your URL
-          git clone https://github.com/Jipok/website-to-apk.git wrapper
-          cd wrapper
-          echo '{"url": "https://renojohnson7.github.io/index.html/", "name": "MyPersonalApp"}' > config.json
-          ./gradlew assembleDebug
+      - name: Build with Web View
+        run: | 
+          # 1. Download the clean wrapper
+          git clone https://github.com/Jipok/website-to-apk.gitwrapper
+                              cd wrapper
+                              # 2. Give the "Robot" permission to run the builder
+                              chmod +x gradlew
+
+                              # 3. Create the configuration 
+                              echo '{"url": "https://renojohnson7.github.io/index.html/", "name": "RenoApp"}' > config.json
+
+                              # 4. Start the build
+                              ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        with:
-          name: My-Free-App
+        with: 
+          name: My-Clean-App
           path: wrapper/app/build/outputs/apk/debug/*.apk
+
