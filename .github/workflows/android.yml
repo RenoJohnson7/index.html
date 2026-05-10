@@ -80,7 +80,7 @@ jobs:
             cp ../icon.png www/icon.png
           fi
 
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting High-Speed Scanner...</body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal...</body></html>' > www/index.html
 
           cordova build android --verbose
 
