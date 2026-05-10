@@ -20,7 +20,7 @@ jobs:
       - name: Create and Build App
         run: |
           # 1. Create a brand new, clean project from scratch
-          cordova create myapp com.reno.kingdom "KingdomOfPowers"
+          cordova create myapp com.reno.kingdom "SodaCal"
           cd myapp
 
           # 2. Add Android system files
@@ -30,7 +30,7 @@ jobs:
           sed -i 's|</widget>|<allow-navigation href="https://*/*" />\n</widget>|' config.xml
 
           # 4. Delete default branding and force the app to open your link immediately
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Loading Kingdom of Powers...</body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Loading SodaCal...</body></html>' > www/index.html
 
           # 5. Compile the final APK
           cordova build android
@@ -38,5 +38,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Kingdom-Of-Powers-App
+          name: SodaCal-App
           path: myapp/platforms/android/app/build/outputs/apk/debug/*.apk
