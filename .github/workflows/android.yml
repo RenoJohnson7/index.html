@@ -1,0 +1,31 @@
+name: Build Website APK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with WebView
+        run: |
+          # This is a shortcut:
+          it downloads a clean wrapper and
+          inserts your URL
+          git clone https://github.com/Jipok/website-to-apk.git wrapper
+          cd wrapper
+          echo '{"url": "https://renojohnson7.github.io/index.html/", "name": "MyPersonalApp"}' > config.json
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-Free-App
+          path: wrapper/app/build/outputs/apk/debug/*.apk
