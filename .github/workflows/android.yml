@@ -12,56 +12,73 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Build Tools
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Ensures Android SDK and Licenses are ready
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Create and Configure Project
+      - name: Build SodaCal App
         run: |
-          # 1. Prevent Cordova from freezing by asking for telemetry permissions
+          # 1. Prevent interactive prompts
           export CI=true
-
-          # 2. Create the project and move into the directory
+          
+          # 2. Create the project
           cordova create myapp com.reno.sodacal "SodaCal" --no-telemetry
           cd myapp
           cordova platform add android
 
-          # 3. Add Camera and Permission Plugins
+          # 3. Add Plugins
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-plugin-camera
 
-          # 4. Update config.xml safely
-          # We use a single, continuous line for the XML to prevent 'sed' from crashing on newlines
-          CONFIG_ADDITIONS='<allow-intent href="*" /><allow-navigation href="https://*/*" /><platform name="android"><config-file target="AndroidManifest.xml" parent="/*"><uses-permission android:name="android.permission.CAMERA" /><uses-feature android:name="android.hardware.camera" /><uses-feature android:name="android.hardware.camera.autofocus" /></config-file></platform>'
-          sed -i "s|</widget>|${CONFIG_ADDITIONS}</widget>|" config.xml
+          # 4. GENERATE CLEAN CONFIG.XML (This replaces the broken sed commands)
+          cat <<EOF > config.xml
+          <?xml version='1.0' encoding='utf-8'?>
+          <widget id="com.reno.sodacal" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+              <name>SodaCal</name>
+              <description>SodaCal Scanner App</description>
+              <author email="dev@sodacal.com" href="https://renojohnson7.github.io/">SodaCal Team</author>
+              <content src="index.html" />
+              <access origin="*" />
+              <allow-intent href="*" />
+              <allow-navigation href="https://*/*" />
+              <preference name="Orientation" value="portrait" />
+              <icon src="www/icon.png" />
+              <platform name="android">
+                  <config-file target="AndroidManifest.xml" parent="/*">
+                      <uses-permission android:name="android.permission.CAMERA" />
+                      <uses-feature android:name="android.hardware.camera" />
+                      <uses-feature android:name="android.hardware.camera.autofocus" />
+                  </config-file>
+              </platform>
+          </widget>
+          EOF
 
-          # 5. Handle the custom icon
+          # 5. Handle Icon and Redirect
           if [ -f "../icon.png" ]; then
-            echo "Found icon.png! Copying to project..."
             cp ../icon.png www/icon.png
-            sed -i 's|</widget>|<icon src="www/icon.png" />\n</widget>|' config.xml
-          else
-            echo "Warning: icon.png not found in the root directory. Using default Cordova icon."
           fi
 
-          # 6. Set the redirect to your SodaCal website
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal Scanner...</body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal...</body></html>' > www/index.html
 
-          # 7. Build the final APK
-          cordova build android
+          # 6. Final Build
+          cordova build android --release -- --loglevel=error
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SodaCal-Camera-Fixed
+          name: SodaCal-Official-APK
           path: myapp/platforms/android/app/build/outputs/apk/debug/*.apk
