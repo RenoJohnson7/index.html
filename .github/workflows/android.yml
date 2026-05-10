@@ -19,24 +19,26 @@ jobs:
 
       - name: Create and Build App
         run: |
-          # 1. Create a brand new, clean project from scratch
-          cordova create myapp com.reno.kingdom "SodaCal"
+          # 1. Create the project
+          cordova create myapp com.reno.sodacal "SodaCal"
           cd myapp
-
-          # 2. Add Android system files
           cordova platform add android
 
-          # 3. Security override to allow your specific website to load
-          sed -i 's|</widget>|<allow-navigation href="https://*/*" />\n</widget>|' config.xml
+          # 2. ADD CAMERA PERMISSIONS (This is the missing step)
+          cordova plugin add cordova-plugin-android-permissions
+          cordova plugin add cordova-plugin-camera
 
-          # 4. Delete default branding and force the app to open your link immediately
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Loading SodaCal...</body></html>' > www/index.html
+          # 3. Update config.xml to explicitly ask for Camera and Navigation
+          sed -i 's|</widget>|<feature name="Camera"><param name="android-package" value="org.apache.cordova.camera.CameraLauncher" /></feature>\n <allow-intent href="allow-intent href="*" />\n <allow-navigation href="https://*/*" />\n <config-file target="AndroidManifest.xml" parent="/*"><uses-permission android:name="android.permission.CAMERA" /><uses-feature android:name="android.hardware.camera" /><uses-feature android:name="android.hardware.camera.autofocus" /></config-file>\n</widget>|' config.xml
 
-          # 5. Compile the final APK
+          # 4. Set the redirect to your SodaCal website
+          echo '<html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Opening SodaCal Scanner...</body></html>' > www/index.html
+
+          # 5. Build the final APK
           cordova build android
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: SodaCal-App
+          name: SodaCal-Camera-Fixed
           path: myapp/platforms/android/app/build/outputs/apk/debug/*.apk
