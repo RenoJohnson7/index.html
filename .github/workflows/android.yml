@@ -1,4 +1,5 @@
 name: SodaCal Final Build
+
 on:
   push:
     branches: [ main, master ]
@@ -8,42 +9,70 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 1. Checkout the repository so the workflow can access your icon.png
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js (Required for Cordova and npm)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. Set up Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      # 4. Install Cordova globally
       - name: Install Build Tools
         run: npm install -g cordova
 
+      # 5. Create, Configure, and Build the Project
       - name: Create and Configure Project
         run: |
-          # 1. Create the project
+          # Create the project and move into the directory
           cordova create myapp com.reno.sodacal "SodaCal"
           cd myapp
           cordova platform add android
 
-          # 2. Add Camera and Permission Plugins
+          # Add Camera and Permission Plugins
           cordova plugin add cordova-plugin-android-permissions
           cordova plugin add cordova-plugin-camera
 
-          # 3. Update config.xml (FIXED TYPO HERE)
-          sed -i 's|</widget>|<allow-intent href="*" />\n <allow-navigation href="https://*/*" />\n <config-file target="AndroidManifest.xml" parent="/*"><uses-permission android:name="android.permission.CAMERA" /><uses-feature android:name="android.hardware.camera" /><uses-feature android:name="android.hardware.camera.autofocus" /></config-file>\n</widget>|' config.xml
+          # Update config.xml safely
+          # We define the additions first, then insert them before the closing </widget> tag
+          CONFIG_ADDITIONS='
+              <allow-intent href="*" />
+              <allow-navigation href="https://*/*" />
+              <platform name="android">
+                  <config-file target="AndroidManifest.xml" parent="/*">
+                      <uses-permission android:name="android.permission.CAMERA" />
+                      <uses-feature android:name="android.hardware.camera" />
+                      <uses-feature android:name="android.hardware.camera.autofocus" />
+                  </config-file>
+              </platform>
+          '
+          sed -i "s|</widget>|$CONFIG_ADDITIONS\n</widget>|" config.xml
 
-          # 4. Use your logo (Make sure icon.png is in your main GitHub folder)
-          if [ -f "../icon.png" ];
-          then
+          # Handle the custom icon
+          if [ -f "../icon.png" ]; then
+            echo "Found icon.png! Copying to project..."
             cp ../icon.png www/icon.png
-            sed -i '/<content/i \    <icon src="www/icon.png" />' config.xml
+            sed -i 's|</widget>|    <icon src="www/icon.png" />\n</widget>|' config.xml
+          else
+            echo "Warning: icon.png not found in the root directory. Using default Cordova icon."
           fi
 
-          # 5. Set the redirect to your SodaCal website
+          # Set the redirect to your SodaCal website
           echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal Scanner...</body></html>' > www/index.html
 
-          # 6. Build the final APK
+          # Build the final APK
           cordova build android
 
+      # 6. Upload the generated APK as an artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
