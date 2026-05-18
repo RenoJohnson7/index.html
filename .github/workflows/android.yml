@@ -33,7 +33,8 @@ jobs:
         run: |
           export CI=true
           
-          cordova create myapp com.reno.sodacal "SodaCal" --no-telemetry
+          # 1. Created with the new unique package ID
+          cordova create myapp com.reno.sodacal.scanner "SodaCal" --no-telemetry
           cd myapp
           cordova platform add android
 
@@ -42,10 +43,10 @@ jobs:
           cordova plugin add cordova-plugin-camera
           cordova plugin add cordova-plugin-androidx-adapter
 
-          # Generate PERFORMANCE-OPTIMIZED config.xml
+          # 2. Updated config.xml with the new package ID
           cat <<EOF > config.xml
           <?xml version='1.0' encoding='utf-8'?>
-          <widget id="com.reno.sodacal" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
+          <widget id="com.reno.sodacal.scanner" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android">
               <name>SodaCal</name>
               <description>High-Performance Barcode Scanner</description>
               <author email="dev@sodacal.com" href="https://renojohnson7.github.io/">SodaCal Team</author>
@@ -80,7 +81,7 @@ jobs:
             cp ../icon.png www/icon.png
           fi
 
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting SodaCal...</body></html>' > www/index.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=https://renojohnson7.github.io/index.html"></head><body style="background-color:#121212; color:#ffffff; text-align:center; padding-top:40vh; font-family:sans-serif;">Starting High-Speed Scanner...</body></html>' > www/index.html
 
           cordova build android --verbose
 
